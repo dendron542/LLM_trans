@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 300px;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .section {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .input-section textarea {
+            width: 100%;
+            height: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .result-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            min-height: 50px;
+        }
+
+        .translate-btn {
+            background: #2196F3;
+            margin-bottom: 10px;
+        }
+
+        .translate-btn:hover {
+            background: #1976D2;
+        }
+
+        .test-btn {
+            background: #FF9800;
+            margin-bottom: 10px;
+        }
+
+        .test-btn:hover {
+            background: #F57C00;
+        }
+
+        .test-result {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .help-text {
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .quick-select-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .quick-select-btn:hover {
+            background: #5a6268;
+        }
+
+        /* カスタムモデル管理用スタイル */
+        .saved-models-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            background: white;
+        }
+
+        .saved-model-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .saved-model-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .saved-model-info {
+            flex-grow: 1;
+            margin-right: 8px;
+        }
+
+        .saved-model-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .saved-model-display-name {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .saved-model-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .saved-model-select-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .saved-model-select-btn:hover {
+            background: #0056b3;
+        }
+
+        .saved-model-delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .saved-model-delete-btn:hover {
+            background: #c82333;
+        }
+
+        .no-saved-models {
+            text-align: center;
+            color: #666;
+            font-size: 11px;
+            padding: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body> <!-- 翻訳セクション -->
+    <div class="section" id="translationSection">
+        <h3>LLM翻訳</h3>
+
+        <div class="input-section">
+            <textarea id="inputText" placeholder="翻訳したいテキストを入力してください... (Enterまたはボタンで翻訳)"></textarea>
+            <button id="translateBtn" class="translate-btn">翻訳する</button>
+        </div>
+        <div class="result-section">
+            <strong>翻訳結果:</strong>
+            <div id="translationResult">右クリックでテキストを選択して翻訳するか、上のテキストエリアに入力してください。</div>
+        </div>
+    </div> <!-- 設定セクション -->
+    <div class="section" id="settingsSection">
+        <h3>LLM翻訳設定</h3>
+
+        <div class="form-group">
+            <label for="uiLanguage">UI言語:</label>
+            <select id="uiLanguage">
+                <option value="ja">日本語</option>
+                <option value="en">English</option>
+            </select>
+            <div class="help-text">拡張機能の表示言語を選択してください</div>
+        </div>
+
+        <div class="form-group">
+            <label for="apiUrl">API URL:</label>
+            <input type="text" id="apiUrl" placeholder="https://api.openai.com/v1/chat/completions">
+            <div style="margin-top: 5px;">
+                <button type="button" class="quick-select-btn"
+                    onclick="setApiUrl('https://api.openai.com/v1/chat/completions')">OpenAI</button>
+                <button type="button" class="quick-select-btn"
+                    onclick="setApiUrl('https://api.anthropic.com/v1/messages')">Claude</button>
+            </div>
+            <div class="help-text">
+                <strong>主要なAPI URL例:</strong><br>
+                • OpenAI: <code>https://api.openai.com/v1/chat/completions</code><br>
+                • Anthropic Claude: <code>https://api.anthropic.com/v1/messages</code><br>
+                • Azure OpenAI:
+                <code>https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2023-12-01-preview</code><br>
+                • ローカルLLM (Ollama): <code>http://localhost:11434/api/chat</code>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="apiKey">APIキー:</label>
+            <input type="password" id="apiKey" placeholder="sk-...">
+        </div>
+
+        <div class="form-group">
+            <label for="model">モデル:</label>
+            <select id="model">
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="gpt-4o-mini">GPT-4o mini</option>
+                <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                <option value="claude-3-haiku">Claude 3 Haiku</option>
+                <option value="custom">カスタム</option>
+            </select>
+            <div class="help-text">使用するLLMモデルを選択してください</div>
+        </div>
+
+        <div class="form-group" id="customModelGroup" style="display: none;">
+            <label for="customModel">カスタムモデル名:</label>
+            <input type="text" id="customModel" placeholder="モデル名を入力">
+            <div class="help-text">APIプロバイダーのモデル名を正確に入力してください</div>
+            
+            <!-- カスタムモデル管理セクション -->
+            <div id="customModelManagement" style="margin-top: 15px;">
+                <h4 style="margin: 10px 0 5px 0; font-size: 14px;">カスタムモデル管理</h4>
+                
+                <!-- 新規モデル追加フォーム -->
+                <div class="custom-model-add-form" style="background: #f9f9f9; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                    <div style="margin-bottom: 8px;">
+                        <input type="text" id="newCustomModelName" placeholder="モデル名 (例: claude-3-opus)" style="width: 100%; margin-bottom: 5px;">
+                        <input type="text" id="newCustomModelDisplayName" placeholder="表示名 (例: Claude 3 Opus)" style="width: 100%; margin-bottom: 5px;">
+                    </div>
+                    <button type="button" id="addCustomModelBtn" style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 3px; font-size: 12px; cursor: pointer; width: 100%;">
+                        モデルを追加
+                    </button>
+                </div>
+                
+                <!-- 保存済みモデル一覧 -->
+                <div class="saved-models-section">
+                    <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px;">保存済みモデル:</div>
+                    <div id="savedCustomModelsList" class="saved-models-list">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="targetLanguage">翻訳先言語:</label>
+            <select id="targetLanguage">
+                <option value="ja">日本語</option>
+                <option value="en">英語</option>
+                <option value="zh">中国語</option>
+                <option value="ko">韓国語</option>
+                <option value="fr">フランス語</option>
+                <option value="de">ドイツ語</option>
+                <option value="es">スペイン語</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="textLengthLimit">テキスト長制限:</label>
+            <input type="number" id="textLengthLimit" placeholder="200" min="50" max="10000">
+            <div class="help-text">この文字数を超えるテキストは別タブで表示されます（デフォルト: 200文字）</div>
+        </div>
+
+        <button id="testConnection" class="test-btn">設定をテスト</button>
+        <button id="save">設定を保存</button>
+        <div id="testResult" class="test-result" style="display: none;"></div>
+        <div id="status"></div>
+    </div> <!-- トラブルシューティングセクション -->
+    <div class="section" id="troubleshootingSection">
+        <h3>トラブルシューティング</h3>
+        <div class="help-text">
+            <strong>右クリックメニューが表示されない場合:</strong><br>
+            1. ページをリロード (F5)<br>
+            2. 拡張機能を無効化→有効化<br>
+            3. Chromeを再起動<br><br>
+
+            <strong>翻訳が実行されない場合:</strong><br>
+            1. テキストを選択してから右クリック<br>
+            2. 開発者ツール (F12) のConsoleでエラー確認<br>
+            3. 設定をテストボタンで接続確認
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
