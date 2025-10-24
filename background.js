@@ -84,8 +84,11 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
                 originalText: selectedText
             });
 
+            // utils.jsから統一翻訳関数を読み込み
+            await import(chrome.runtime.getURL('utils.js'));
+            
             // 翻訳を実行
-            const translatedText = await translateText(selectedText, apiUrl, apiKey, targetLanguage || 'ja', modelName);
+            const translatedText = await translateWithApiProvider(selectedText, apiUrl, apiKey, targetLanguage || 'ja', modelName);
 
             // 結果をコンテンツスクリプトに送信
             chrome.tabs.sendMessage(tab.id, {
@@ -97,58 +100,24 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
         } catch (error) {
             console.error('翻訳エラー:', error);
+            
+            // エラーメッセージをフォーマット
+            const formattedError = formatErrorMessage(error);
+            let errorMessage = formattedError.message;
+            
+            if (formattedError.suggestions.length > 0) {
+                errorMessage += '\n\n解決方法:\n• ' + formattedError.suggestions.join('\n• ');
+            }
+            
+            // ユーザーにエラーを通知
+            chrome.tabs.sendMessage(tab.id, {
+                action: "showError",
+                message: errorMessage,
+                errorType: formattedError.type
+            });
         }
     }
 });
 
-// LLM APIを使って翻訳する関数
-async function translateText(text, apiUrl, apiKey, targetLanguage, model) {
-    try {
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    {
-                        role: "system",
-                        content: `あなたは優秀な翻訳者です。与えられたテキストを${targetLanguage === 'ja' ? '日本語' : targetLanguage}に翻訳してください。翻訳結果のみを返してください。`
-                    },
-                    {
-                        role: "user",
-                        content: text
-                    }
-                ],
-                max_tokens: 1000,
-                temperature: 0.3
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error ${response.status}: ${errorText}`);
-        }
-
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const responseText = await response.text();
-            throw new Error(`APIが正しいJSON形式で応答していません。レスポンス: ${responseText.substring(0, 200)}...`);
-        }
-
-        const data = await response.json();
-
-        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-            throw new Error('APIレスポンスの形式が正しくありません');
-        }
-
-        return data.choices[0].message.content.trim();
-    } catch (error) {
-        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            throw new Error('ネットワークエラー: API URLが正しいか確認してください');
-        }
-        throw error;
-    }
-}
+// RateLimitError と formatErrorMessage は utils.js で定義されています
+// utils.jsはservice workerでimportして使用

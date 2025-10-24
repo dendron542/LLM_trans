@@ -130,6 +130,17 @@ function initializeTranslationSection() {
                 translateText(text);
             }
         });
+    }
+
+    const translateInTabBtn = document.getElementById('translateInTabBtn');
+    if (translateInTabBtn) {
+        // 新しいタブで翻訳ボタンのクリックイベント
+        translateInTabBtn.addEventListener('click', function () {
+            const text = inputText.value.trim();
+            if (text) {
+                translateInNewTab(text);
+            }
+        });
     } if (inputText) {
         // Ctrl+Enterキーで翻訳実行
         inputText.addEventListener('keydown', function (e) {
@@ -183,67 +194,106 @@ function initializeTranslationSection() {
             console.log('使用するモデル:', modelName); // デバッグログ
 
             // 翻訳実行
-            const translation = await performTranslation(text, apiUrl, apiKey, targetLanguage || 'ja', modelName);
+            const translation = await translateWithApiProvider(text, apiUrl, apiKey, targetLanguage || 'ja', modelName);
             translationResult.textContent = translation;
 
         } catch (error) {
             console.error('翻訳エラー:', error); // デバッグログ
-            translationResult.textContent = getTranslatedText('translationError') + ': ' + error.message;
+            
+            // エラーメッセージをフォーマット
+            const formattedError = formatErrorMessage(error);
+            let errorMessage = formattedError.message;
+            
+            if (formattedError.suggestions.length > 0) {
+                errorMessage += '\n\n解決方法:\n• ' + formattedError.suggestions.join('\n• ');
+            }
+            
+            translationResult.textContent = getTranslatedText('translationError') + ': ' + errorMessage;
         }
     }
-}
 
-// 翻訳実行関数
-async function performTranslation(text, apiUrl, apiKey, targetLanguage, model) {
-    try {
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    {
-                        role: "system",
-                        content: `あなたは優秀な翻訳者です。与えられたテキストを${targetLanguage === 'ja' ? '日本語' : targetLanguage}に翻訳してください。翻訳結果のみを返してください。`
-                    },
-                    {
-                        role: "user",
-                        content: text
+    // 新しいタブで翻訳実行関数
+    async function translateInNewTab(text) {
+        console.log('新しいタブで翻訳開始:', text); // デバッグログ
+
+        try {
+            // 設定を取得
+            const result = await chrome.storage.sync.get(['apiUrl', 'apiKey', 'targetLanguage', 'model', 'customModel']);
+            const { apiUrl, apiKey, targetLanguage, model, customModel } = result;
+
+            console.log('取得した設定:', result); // デバッグログ
+
+            if (!apiUrl || !apiKey) {
+                alert(getTranslatedText('apiSettingsRequired'));
+                return;
+            }
+
+            // モデル名を決定
+            let modelName = model || 'gpt-3.5-turbo';
+            if (model === 'custom' && customModel) {
+                modelName = customModel;
+            } else if (model === 'custom' && !customModel) {
+                alert(getTranslatedText('customModelRequired'));
+                return;
+            }
+
+            console.log('使用するモデル:', modelName); // デバッグログ
+
+            // 翻訳データを一時的にstorageに保存
+            const translationData = {
+                text: text,
+                apiUrl: apiUrl,
+                apiKey: apiKey,
+                targetLanguage: targetLanguage || 'ja',
+                model: modelName,
+                timestamp: Date.now()
+            };
+            
+            console.log('翻訳データをstorageに保存:', translationData);
+            await chrome.storage.local.set({ pendingTranslation: translationData });
+
+            // 新しいタブでtranslation_view.htmlを開く
+            chrome.tabs.create({
+                url: chrome.runtime.getURL('translation_view.html?method=storage')
+            }, async (tab) => {
+                console.log('新しいタブを作成しました:', tab.id);
+                
+                // バックアップとしてメッセージも送信を試行
+                setTimeout(async () => {
+                    try {
+                        console.log('バックアップメッセージを送信中...');
+                        await chrome.tabs.sendMessage(tab.id, {
+                            action: 'translate',
+                            text: text,
+                            apiUrl: apiUrl,
+                            apiKey: apiKey,
+                            targetLanguage: targetLanguage || 'ja',
+                            model: modelName
+                        });
+                        console.log('バックアップメッセージ送信成功');
+                    } catch (error) {
+                        console.log('バックアップメッセージ送信失敗（問題なし）:', error.message);
                     }
-                ],
-                max_tokens: 1000,
-                temperature: 0.3
-            })
-        });
+                }, 1000);
+            });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error ${response.status}: ${errorText}`);
+        } catch (error) {
+            console.error('新しいタブで翻訳エラー:', error); // デバッグログ
+            
+            // エラーメッセージをフォーマット
+            const formattedError = formatErrorMessage(error);
+            let errorMessage = formattedError.message;
+            
+            if (formattedError.suggestions.length > 0) {
+                errorMessage += '\n\n解決方法:\n• ' + formattedError.suggestions.join('\n• ');
+            }
+            
+            alert(getTranslatedText('translationError') + ': ' + errorMessage);
         }
-
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const responseText = await response.text();
-            throw new Error(`APIが正しいJSON形式で応答していません。レスポンス: ${responseText.substring(0, 200)}...`);
-        }
-
-        const data = await response.json();
-
-        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-            throw new Error('APIレスポンスの形式が正しくありません');
-        }
-
-        return data.choices[0].message.content.trim();
-    } catch (error) {
-        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            throw new Error('ネットワークエラー: API URLが正しいか確認してください');
-        }
-        throw error;
     }
 }
+
+// RateLimitError と formatErrorMessage は utils.js で定義されています
 
 // テスト接続ボタンのイベント
 document.getElementById('testConnection').addEventListener('click', async () => {
@@ -279,7 +329,7 @@ document.getElementById('testConnection').addEventListener('click', async () => 
 
     try {
         const testText = 'Hello';
-        const translation = await performTranslation(testText, apiUrl, apiKey, 'ja', modelName);
+        const translation = await translateWithApiProvider(testText, apiUrl, apiKey, 'ja', modelName);
         showTestResult(`接続成功！テスト翻訳: "${testText}" → "${translation}"`, 'success');
     } catch (error) {
         let errorMessage = 'テスト失敗: ' + error.message;
@@ -460,6 +510,7 @@ const translations = {
 
         // ボタン
         translateBtn: '翻訳する',
+        translateInTabBtn: '新しいタブで翻訳',
         testConnectionBtn: '設定をテスト',
         saveBtn: '設定を保存',
         openaiBtn: 'OpenAI',
@@ -528,6 +579,7 @@ const translations = {
 
         // ボタン
         translateBtn: 'Translate',
+        translateInTabBtn: 'Translate in New Tab',
         testConnectionBtn: 'Test Settings',
         saveBtn: 'Save Settings',
         openaiBtn: 'OpenAI',
@@ -630,6 +682,9 @@ function updateUILanguage(lang) {
     // ボタン
     const translateBtn = document.getElementById('translateBtn');
     if (translateBtn) translateBtn.textContent = t.translateBtn;
+
+    const translateInTabBtn = document.getElementById('translateInTabBtn');
+    if (translateInTabBtn) translateInTabBtn.textContent = t.translateInTabBtn;
 
     const testConnectionBtn = document.getElementById('testConnection');
     if (testConnectionBtn) testConnectionBtn.textContent = t.testConnectionBtn;
@@ -778,39 +833,49 @@ function updateCustomModelManagementLabels(t) {
 
 // カスタムモデル管理の初期化
 async function initializeCustomModelManagement() {
-    // 保存済みモデル一覧を表示
-    await refreshSavedModelsList();
-    
-    // 新規モデル追加ボタンのイベントリスナー
-    const addCustomModelBtn = document.getElementById('addCustomModelBtn');
-    if (addCustomModelBtn) {
-        addCustomModelBtn.addEventListener('click', handleAddCustomModel);
+    try {
+        // 保存済みモデル一覧を表示
+        await refreshSavedModelsList();
+
+        // 新規モデル追加ボタンのイベントリスナー
+        const addCustomModelBtn = document.getElementById('addCustomModelBtn');
+        if (addCustomModelBtn) {
+            addCustomModelBtn.addEventListener('click', handleAddCustomModel);
+        }
+    } catch (error) {
+        console.error('カスタムモデル管理の初期化エラー:', error);
+        showStatus('カスタムモデル管理の初期化に失敗しました', 'error');
     }
 }
 
 // 保存済みモデル一覧を更新表示
 async function refreshSavedModelsList() {
-    const customModels = await getCustomModels();
-    const listContainer = document.getElementById('savedCustomModelsList');
-    
-    if (!listContainer) return;
-    
-    // 一覧をクリア
-    listContainer.innerHTML = '';
-    
-    if (customModels.length === 0) {
-        const noModelsDiv = document.createElement('div');
-        noModelsDiv.className = 'no-saved-models';
-        noModelsDiv.textContent = getTranslatedText('noSavedModels');
-        listContainer.appendChild(noModelsDiv);
-        return;
+    try {
+        const customModels = await getCustomModels();
+        const listContainer = document.getElementById('savedCustomModelsList');
+
+        if (!listContainer) return;
+
+        // 一覧をクリア
+        listContainer.innerHTML = '';
+
+        if (customModels.length === 0) {
+            const noModelsDiv = document.createElement('div');
+            noModelsDiv.className = 'no-saved-models';
+            noModelsDiv.textContent = getTranslatedText('noSavedModels');
+            listContainer.appendChild(noModelsDiv);
+            return;
+        }
+
+        // 各モデルのアイテムを作成
+        customModels.forEach(model => {
+            const modelItem = createSavedModelItem(model);
+            listContainer.appendChild(modelItem);
+        });
+    } catch (error) {
+        console.error('モデル一覧の更新エラー:', error);
+        // エラーが発生しても継続（ユーザーには表示しない）
     }
-    
-    // 各モデルのアイテムを作成
-    customModels.forEach(model => {
-        const modelItem = createSavedModelItem(model);
-        listContainer.appendChild(modelItem);
-    });
 }
 
 // 保存済みモデルアイテムのHTML要素を作成
@@ -890,26 +955,37 @@ async function handleAddCustomModel() {
 }
 
 // カスタムモデル選択のハンドラー
-function selectCustomModel(model) {
+async function selectCustomModel(model) {
     // モデル選択を「custom」に設定
     const modelSelect = document.getElementById('model');
     if (modelSelect) {
         modelSelect.value = 'custom';
-        
+
         // カスタムモデル入力フィールドを表示
         const customModelGroup = document.getElementById('customModelGroup');
         if (customModelGroup) {
             customModelGroup.style.display = 'block';
         }
-        
+
         // カスタムモデル名を設定
         const customModelInput = document.getElementById('customModel');
         if (customModelInput) {
             customModelInput.value = model.name;
         }
     }
-    
-    showStatus(`"${model.displayName}"${getTranslatedText('modelSelected')}`, 'success');
+
+    try {
+        // 自動的にstorageに保存
+        await chrome.storage.sync.set({
+            model: 'custom',
+            customModel: model.name
+        });
+
+        showStatus(`"${model.displayName}"${getTranslatedText('modelSelected')}`, 'success');
+    } catch (error) {
+        console.error('モデル選択の保存エラー:', error);
+        showStatus('モデル選択の保存に失敗しました。「設定を保存」ボタンを押してください。', 'error');
+    }
 }
 
 // カスタムモデル削除のハンドラー
