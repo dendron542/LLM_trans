@@ -523,17 +523,18 @@ function formatErrorMessage(error) {
 
 // Export functions for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { 
-        ApiProvider, 
-        translateWithApiProvider, 
-        translateWithRetry, 
-        RateLimitError, 
+    // Node.js環境（現在は使用していないが、将来のため保持）
+    module.exports = {
+        ApiProvider,
+        translateWithApiProvider,
+        translateWithRetry,
+        RateLimitError,
         formatErrorMessage,
         extractRateLimitInfo,
         notifyRateLimitWait
     };
-} else {
-    // ブラウザ環境ではグローバルに公開
+} else if (typeof window !== 'undefined') {
+    // ブラウザ環境（translation_view.html等から使用）
     window.ApiProvider = ApiProvider;
     window.translateWithApiProvider = translateWithApiProvider;
     window.translateWithRetry = translateWithRetry;
@@ -541,4 +542,13 @@ if (typeof module !== 'undefined' && module.exports) {
     window.formatErrorMessage = formatErrorMessage;
     window.extractRateLimitInfo = extractRateLimitInfo;
     window.notifyRateLimitWait = notifyRateLimitWait;
+} else if (typeof self !== 'undefined') {
+    // Service Worker環境（background.jsから使用）
+    self.ApiProvider = ApiProvider;
+    self.translateWithApiProvider = translateWithApiProvider;
+    self.translateWithRetry = translateWithRetry;
+    self.RateLimitError = RateLimitError;
+    self.formatErrorMessage = formatErrorMessage;
+    self.extractRateLimitInfo = extractRateLimitInfo;
+    self.notifyRateLimitWait = notifyRateLimitWait;
 }

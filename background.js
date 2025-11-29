@@ -1,3 +1,6 @@
+// Service Workerでutils.jsをインポート
+importScripts('utils.js');
+
 // 右クリックメニューを作成
 chrome.runtime.onInstalled.addListener(() => {
     console.log('LLM翻訳拡張機能がインストールされました');
@@ -84,10 +87,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
                 originalText: selectedText
             });
 
-            // utils.jsから統一翻訳関数を読み込み
-            await import(chrome.runtime.getURL('utils.js'));
-            
-            // 翻訳を実行
+            // 翻訳を実行（utils.jsは既にimportScriptsで読み込み済み）
             const translatedText = await translateWithApiProvider(selectedText, apiUrl, apiKey, targetLanguage || 'ja', modelName);
 
             // 結果をコンテンツスクリプトに送信
