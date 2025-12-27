@@ -66,13 +66,23 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
             // 文字数制限をチェック（デフォルトは200文字）
             const lengthLimit = textLengthLimit || 200; if (selectedText.length > lengthLimit) {
                 // 文字数が制限を超える場合、新しいタブで表示
-                const translationUrl = chrome.runtime.getURL('translation_view.html') +
-                    `?original=${encodeURIComponent(selectedText)}&model=${encodeURIComponent(modelName)}`;
-
-                console.log('Opening translation tab with URL:', translationUrl);
+                console.log('Opening translation tab for long text');
                 console.log('Selected text length:', selectedText.length);
                 console.log('Model name:', modelName);
 
+                // 翻訳データをStorageに保存
+                await chrome.storage.local.set({
+                    pendingTranslation: {
+                        text: selectedText,
+                        model: modelName,
+                        apiUrl: apiUrl,
+                        apiKey: apiKey,
+                        targetLanguage: targetLanguage || 'ja'
+                    }
+                });
+
+                // タブを開く（storage方式）
+                const translationUrl = chrome.runtime.getURL('translation_view.html') + '?method=storage';
                 chrome.tabs.create({
                     url: translationUrl,
                     active: true
