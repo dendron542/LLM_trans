@@ -1,0 +1,8 @@
+# Claude Code設定ファイル（ローカルのみ）
+CLAUDE.md
+AGENTS.md
+AGENTS_JP.md
+.claude/
+
+# 一時ファイル
+tmp/
