@@ -6,3 +6,15 @@ AGENTS_JP.md
 
 # 一時ファイル
 tmp/
+tmpclaude-*
+
+# プロジェクト管理ファイル（ローカルのみ）
+plan/
+logs/
+prog/
+
+# MCP設定（ローカルのみ）
+.mcp.json
+
+# テストキャッシュ
+.pytest_cache/

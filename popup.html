@@ -104,6 +104,15 @@
             background: #1976D2;
         }
 
+        .translate-in-tab-btn {
+            background: #17a2b8;
+            margin-bottom: 10px;
+        }
+
+        .translate-in-tab-btn:hover {
+            background: #138496;
+        }
+
         .test-btn {
             background: #FF9800;
             margin-bottom: 10px;
@@ -151,7 +160,7 @@
             background: #5a6268;
         }
 
-        /* カスタムモデル管理用スタイル */
+        /* カスタムモデル管理セクションのスタイル */
         .saved-models-list {
             max-height: 150px;
             overflow-y: auto;
@@ -244,12 +253,13 @@
         <div class="input-section">
             <textarea id="inputText" placeholder="翻訳したいテキストを入力してください... (Enterまたはボタンで翻訳)"></textarea>
             <button id="translateBtn" class="translate-btn">翻訳する</button>
+            <button id="translateInTabBtn" class="translate-in-tab-btn">新しいタブで翻訳</button>
         </div>
         <div class="result-section">
             <strong>翻訳結果:</strong>
-            <div id="translationResult">右クリックでテキストを選択して翻訳するか、上のテキストエリアに入力してください。</div>
+            <div id="translationResult">選択したテキストを右クリックで翻訳、または上の入力欄にテキストを入力してください。</div>
         </div>
-    </div> <!-- 設定セクション -->
+    </div> <!-- 翻訳セクション -->
     <div class="section" id="settingsSection">
         <h3>LLM翻訳設定</h3>
 
@@ -272,12 +282,12 @@
                     onclick="setApiUrl('https://api.anthropic.com/v1/messages')">Claude</button>
             </div>
             <div class="help-text">
-                <strong>主要なAPI URL例:</strong><br>
-                • OpenAI: <code>https://api.openai.com/v1/chat/completions</code><br>
-                • Anthropic Claude: <code>https://api.anthropic.com/v1/messages</code><br>
-                • Azure OpenAI:
+                <strong>主なAPI URL例:</strong><br>
+                ・ OpenAI: <code>https://api.openai.com/v1/chat/completions</code><br>
+                ・ Anthropic Claude: <code>https://api.anthropic.com/v1/messages</code><br>
+                ・ Azure OpenAI:
                 <code>https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2023-12-01-preview</code><br>
-                • ローカルLLM (Ollama): <code>http://localhost:11434/api/chat</code>
+                ・ ローカルLLM (Ollama): <code>http://localhost:11434/api/chat</code>
             </div>
         </div>
         <div class="form-group">
@@ -303,12 +313,12 @@
         <div class="form-group" id="customModelGroup" style="display: none;">
             <label for="customModel">カスタムモデル名:</label>
             <input type="text" id="customModel" placeholder="モデル名を入力">
-            <div class="help-text">APIプロバイダーのモデル名を正確に入力してください</div>
-            
+            <div class="help-text">APIプロバイダに登録されているモデル名を入力してください</div>
+
             <!-- カスタムモデル管理セクション -->
             <div id="customModelManagement" style="margin-top: 15px;">
                 <h4 style="margin: 10px 0 5px 0; font-size: 14px;">カスタムモデル管理</h4>
-                
+
                 <!-- 新規モデル追加フォーム -->
                 <div class="custom-model-add-form" style="background: #f9f9f9; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
                     <div style="margin-bottom: 8px;">
@@ -319,12 +329,12 @@
                         モデルを追加
                     </button>
                 </div>
-                
+
                 <!-- 保存済みモデル一覧 -->
                 <div class="saved-models-section">
                     <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px;">保存済みモデル:</div>
                     <div id="savedCustomModelsList" class="saved-models-list">
-                        <!-- JavaScriptで動的に生成 -->
+                        <!-- JavaScriptで動的に表示 -->
                     </div>
                 </div>
             </div>
@@ -345,26 +355,26 @@
         <div class="form-group">
             <label for="textLengthLimit">テキスト長制限:</label>
             <input type="number" id="textLengthLimit" placeholder="200" min="50" max="10000">
-            <div class="help-text">この文字数を超えるテキストは別タブで表示されます（デフォルト: 200文字）</div>
+            <div class="help-text">この制限を超えるテキストは新しいタブで表示されます（デフォルト: 200文字）</div>
         </div>
 
         <button id="testConnection" class="test-btn">設定をテスト</button>
         <button id="save">設定を保存</button>
         <div id="testResult" class="test-result" style="display: none;"></div>
         <div id="status"></div>
-    </div> <!-- トラブルシューティングセクション -->
+    </div> <!-- 設定セクション -->
     <div class="section" id="troubleshootingSection">
         <h3>トラブルシューティング</h3>
         <div class="help-text">
-            <strong>右クリックメニューが表示されない場合:</strong><br>
-            1. ページをリロード (F5)<br>
-            2. 拡張機能を無効化→有効化<br>
+            <strong>右クリックメニューが出ない場合:</strong><br>
+            1. ページを再読み込み (F5)<br>
+            2. 拡張機能を一度OFFにしてON<br>
             3. Chromeを再起動<br><br>
 
-            <strong>翻訳が実行されない場合:</strong><br>
-            1. テキストを選択してから右クリック<br>
-            2. 開発者ツール (F12) のConsoleでエラー確認<br>
-            3. 設定をテストボタンで接続確認
+            <strong>翻訳が動かない場合:</strong><br>
+            1. 右クリック前にテキストを選択<br>
+            2. 開発者ツール(F12)のConsoleを確認<br>
+            3. 「設定をテスト」ボタンで接続を確認
         </div>
     </div>
 

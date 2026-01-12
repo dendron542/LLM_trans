@@ -45,7 +45,8 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "translation_view.html"
+                "translation_view.html",
+                "utils.js"
             ],
             "matches": [
                 "<all_urls>"

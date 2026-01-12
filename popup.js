@@ -520,7 +520,7 @@ const translations = {
 
         // メッセージ
         translationResult: '翻訳結果:',
-        rightClickMessage: '右クリックでテキストを選択して翻訳するか、上のテキストエリアに入力してください。',
+        rightClickMessage: '選択したテキストを右クリックで翻訳、または上の入力欄にテキストを入力してください。',
         customModelRequired: 'カスタムモデル名を入力してください',
         settingsSaved: '設定が保存されました',
         settingsSaveFailed: '設定の保存に失敗しました',
@@ -531,7 +531,7 @@ const translations = {
         modelHelp: '使用するLLMモデルを選択してください',
         customModelHelp: 'APIプロバイダーのモデル名を正確に入力してください',
         textLengthLimitHelp: 'この文字数を超えるテキストは別タブで表示されます（デフォルト: 200文字）',
-        apiExamples: '主要なAPI URL例:',
+        apiExamples: '主なAPI URL例:',
 
         // 言語オプション
         japanese: '日本語',
@@ -745,7 +745,7 @@ function updateHelpTexts(t) {
 
     // API URLのヘルプテキスト
     const apiUrlHelp = document.querySelector('#apiUrl').parentElement.querySelector('.help-text');
-    if (apiUrlHelp && apiUrlHelp.innerHTML.includes('主要なAPI URL例:') || apiUrlHelp.innerHTML.includes('Common API URL examples:')) {
+    if (apiUrlHelp && (apiUrlHelp.innerHTML.includes('主なAPI URL例:') || apiUrlHelp.innerHTML.includes('Common API URL examples:'))) {
         const code1 = 'https://api.openai.com/v1/chat/completions';
         const code2 = 'https://api.anthropic.com/v1/messages';
         const code3 = 'https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2023-12-01-preview';
