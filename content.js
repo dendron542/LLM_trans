@@ -6,11 +6,11 @@ const style = document.createElement('style');
 style.textContent = `
   .llm-translation-popup {
     position: fixed;
-    background: white;
-    border: 1px solid #ddd;
+    background: #fcfcfd;
+    border: 1px solid #d0d7de;
     border-radius: 8px;
     padding: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 24px rgba(17, 24, 39, 0.18);
     z-index: 10000;
     max-width: 400px;
     max-height: 500px;
@@ -18,23 +18,24 @@ style.textContent = `
     font-family: Arial, sans-serif;
     font-size: 14px;
     line-height: 1.6;
+    color: #111827;
   }
 
   .llm-translation-error {
-    background: #ffebee;
-    border-color: #f44336;
-    color: #c62828;
+    background: #fff5f5;
+    border-color: #e57373;
+    color: #8a1f1f;
   }
 
   .llm-translation-translating {
-    background: #fff3e0;
-    border-color: #ff9800;
-    color: #e65100;
+    background: #fff7ed;
+    border-color: #f59e0b;
+    color: #92400e;
   }
 
   .llm-translation-result {
-    background: #e8f5e9;
-    border-color: #4caf50;
+    background: #f6fbf7;
+    border-color: #34a853;
   }
 
   .llm-translation-popup .close-btn {
@@ -45,17 +46,18 @@ style.textContent = `
     border: none;
     font-size: 18px;
     cursor: pointer;
-    color: #999;
+    color: #6b7280;
   }
 
   .llm-translation-popup .close-btn:hover {
-    color: #333;
+    color: #111827;
   }
 
   .llm-translation-popup .title {
     font-weight: bold;
     margin-bottom: 10px;
     padding-right: 20px;
+    color: #0f172a;
   }
 
   .llm-translation-popup .content {
@@ -64,15 +66,17 @@ style.textContent = `
 
   .llm-translation-popup .label {
     font-weight: bold;
-    color: #555;
+    color: #374151;
     margin-top: 10px;
     margin-bottom: 5px;
   }
 
   .llm-translation-popup .text {
     padding: 10px;
-    background: #f5f5f5;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
     border-radius: 4px;
+    color: #0f172a;
     white-space: pre-wrap;
     word-wrap: break-word;
   }
